@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace RegistroEstudiantes.Models
 {
     public class Estudiantes
@@ -16,10 +18,7 @@ namespace RegistroEstudiantes.Models
         public string Email { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "La fecha de nacimiento es requerida")]
-        public DateTime FechaNacimeinto { get; set; } = DateTime.Now;
-
-        
-
-
+        [Column("FechaNacimeinto")]
+        public DateTime FechaNacimiento { get; set; } = DateTime.Now;
     }
 }
