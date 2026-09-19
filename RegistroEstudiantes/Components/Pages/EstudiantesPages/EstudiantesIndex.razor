@@ -1,0 +1,52 @@
+﻿@page "/Estudiante/Index"
+@inject EstudiantesService estudiantesService
+@rendermode InteractiveServer
+
+<PageTitle>Consulta de Estudiantes</PageTitle>
+
+<div class="container">
+    <div class="card shadow-lg">
+        <div class="card-header font-weight-bold d-flex justify-content-between align-items-center">
+            <h5 class="card-title">Listado de Estudiantes</h5>
+            <a href="/Estudiante/Create" class="btn btn-primary"><span class="bi bi-plus-square"></span> Crear</a>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered text-center">
+                <thead>
+                    <tr>
+                        <th>EstudianteId</th>
+                        <th>Nombres</th>
+                        <th>Dirección</th>
+                        <th>Email</th>
+                        <th>Fecha de Nacimiento</th>
+                        <th>Editar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var estudiante in ListaEstudiantes)
+                    {
+                        <tr>
+                            <td>@estudiante.EstudianteId</td>
+                            <td>@estudiante.Nombres</td>
+                            <td>@estudiante.Direccion</td>
+                            <td>@estudiante.Email</td>
+                            <td>@estudiante.FechaNacimiento.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                <a href="/Estudiante/Edit/@estudiante.EstudianteId" class="btn btn-outline-primary"><span class="bi bi-pencil-square"></span></a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@code {
+    public List<Estudiantes> ListaEstudiantes { get; set; } = new List<Estudiantes>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        ListaEstudiantes = await estudiantesService.GetList(e => true);
+    }
+}
