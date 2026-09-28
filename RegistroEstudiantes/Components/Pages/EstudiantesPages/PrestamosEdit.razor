@@ -1,0 +1,133 @@
+﻿@page "/Prestamo/Edit/{PrestamoId:int}"
+@inject PrestamosServices prestamosServices
+@inject EstudiantesService estudiantesService
+@inject LibrosServices librosServices
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Editar Préstamo</PageTitle>
+
+<EditForm Model="Prestamo" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+
+    <div class="container">
+        <div class="card shadow-lg">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Editar Préstamo #@PrestamoId</h5>
+            </div>
+            <div class="card-body">
+                @if (!string.IsNullOrEmpty(MensajeError))
+                {
+                    <div class="alert alert-danger" role="alert">
+                        @MensajeError
+                    </div>
+                }
+
+                @* Estudiante *@
+                <div class="mb-3">
+                    <label class="form-label font-weight-bold">Estudiante:</label>
+                    <InputSelect @bind-Value="Prestamo.EstudianteId" class="form-select">
+                        <option value="0">-- Seleccione un estudiante --</option>
+                        @foreach (var estudiante in ListaEstudiantes)
+                        {
+                            <option value="@estudiante.EstudianteId">@estudiante.Nombres</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => Prestamo.EstudianteId)" />
+                </div>
+
+                @* Libro *@
+                <div class="mb-3">
+                    <label class="form-label font-weight-bold">Libro:</label>
+                    <InputSelect @bind-Value="Prestamo.LibroId" class="form-select">
+                        <option value="0">-- Seleccione un libro --</option>
+                        @foreach (var libro in ListaLibros)
+                        {
+                            <option value="@libro.LibroId">@libro.Titulo</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => Prestamo.LibroId)" />
+                </div>
+
+                @* Fecha prestamo *@
+                <div class="mb-3">
+                    <label class="form-label font-weight-bold">Fecha de Préstamo:</label>
+                    <InputDate @bind-Value="Prestamo.FechaPrestamo" class="form-control" />
+                    <ValidationMessage For="@(() => Prestamo.FechaPrestamo)" />
+                </div>
+
+                @* Fecha Devolución *@
+                <div class="mb-3">
+                    <label class="form-label font-weight-bold">Fecha de Devolución Esperada:</label>
+                    <InputDate @bind-Value="Prestamo.FechaDevolucion" class="form-control" />
+                    <ValidationMessage For="@(() => Prestamo.FechaDevolucion)" />
+                </div>
+
+                @* Estado de devolucion *@
+                <div class="mb-3 form-check">
+                    <InputCheckbox @bind-Value="Prestamo.Devuelto" class="form-check-input" id="devueltoCheck" />
+                    <label class="form-check-label font-weight-bold" for="devueltoCheck">
+                        ¿Libro Devuelto?
+                    </label>
+                </div>
+            </div>
+
+            <div class="card-footer d-flex justify-content-between">
+                <a href="/Prestamo/Index" class="btn btn-secondary">
+                    <span class="bi bi-arrow-left"></span> Volver
+                </a>
+                <button type="submit" class="btn btn-success">
+                    <span class="bi bi-floppy"></span> Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int PrestamoId { get; set; }
+
+    public Prestamos Prestamo { get; set; } = new Prestamos();
+    public List<Estudiantes> ListaEstudiantes { get; set; } = new List<Estudiantes>();
+    public List<Libros> ListaLibros { get; set; } = new List<Libros>();
+    public string MensajeError { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ListaEstudiantes = await estudiantesService.GetList(e => true);
+        ListaLibros = await librosServices.Listar(l => true);
+
+        var prestamoEncontrado = await prestamosServices.Buscar(PrestamoId);
+        if (prestamoEncontrado != null)
+        {
+            Prestamo = prestamoEncontrado;
+        }
+        else
+        {
+            navigationManager.NavigateTo("/Prestamo/Index");
+        }
+    }
+
+    public async Task Guardar()
+    {
+        MensajeError = string.Empty;
+
+        bool yaPrestado = await prestamosServices.LibroPrestado(Prestamo.LibroId, Prestamo.PrestamoId);
+        if (yaPrestado)
+        {
+            MensajeError = "El libro seleccionado ya se encuentra prestado";
+            return;
+        }
+
+        var guardo = await prestamosServices.Guardar(Prestamo);
+        if (guardo)
+        {
+            navigationManager.NavigateTo("/Prestamo/Index");
+        }
+        else
+        {
+            MensajeError = "No se pudieron guardar los cambios.";
+        }
+    }
+}
