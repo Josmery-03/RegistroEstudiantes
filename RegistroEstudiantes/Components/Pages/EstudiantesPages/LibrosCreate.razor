@@ -1,0 +1,69 @@
+﻿@page "/Libro/Create"
+@inject LibrosServices librosServices
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Registro de Libro</PageTitle>
+
+<EditForm Model="Libro" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+
+    <div class="card shadow-lg mt-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Crear Nuevo Libro</h5>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label"><strong>Título</strong></label>
+                <InputText class="form-control" @bind-Value="Libro.Titulo" />
+                <ValidationMessage For="@(() => Libro.Titulo)" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label"><strong>Autor</strong></label>
+                <InputText class="form-control" @bind-Value="Libro.Autor" />
+                <ValidationMessage For="@(() => Libro.Autor)" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label"><strong>Año de Publicación</strong></label>
+                <InputNumber class="form-control" @bind-Value="Libro.AnoPublicacion" />
+                <ValidationMessage For="@(() => Libro.AnoPublicacion)" />
+            </div>
+
+            @if (!string.IsNullOrEmpty(MensajeError))
+            {
+                <div class="alert alert-danger">@MensajeError</div>
+            }
+        </div>
+        <div class="card-footer text-center">
+            <a href="/Libro/Index" class="btn btn-secondary me-2">Volver</a>
+            <button type="submit" class="btn btn-success">Guardar</button>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    public Libros Libro { get; set; } = new Libros();
+    public string MensajeError { get; set; } = string.Empty;
+
+    public async Task Guardar()
+    {
+  
+        if (await librosServices.ExtisteTitulo(Libro.Titulo))
+        {
+            MensajeError = "Ya existe un libro registrado con este título.";
+            return;
+        }
+
+        var guardado = await librosServices.Guardar(Libro);
+        if (guardado)
+        {
+            navigationManager.NavigateTo("/Libro/Index");
+        }
+        else
+        {
+            MensajeError = "Error al intentar guardar el libro en la base de datos.";
+        }
+    }
+}

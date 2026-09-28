@@ -1,0 +1,91 @@
+﻿@page "/Libro/Edit/{LibroId:int}"
+@inject LibrosServices librosServices
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Editar Libro</PageTitle>
+
+<EditForm Model="Libro" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+
+    <div class="card shadow-lg mt-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Modificar Libro</h5>
+        </div>
+        <div class="card-body">
+            @* Campo oculto o visible para el ID *@
+            <div class="mb-3">
+                <label class="form-label"><strong>Libro ID</strong></label>
+                <input class="form-control" value="@Libro.LibroId" disabled />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label"><strong>Título</strong></label>
+                <InputText class="form-control" @bind-Value="Libro.Titulo" />
+                <ValidationMessage For="@(() => Libro.Titulo)" />
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label"><strong>Autor</strong></label>
+                <InputText class="form-control" @bind-Value="Libro.Autor" />
+                <ValidationMessage For="@(() => Libro.Autor)" />
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label"><strong>Año de Publicación</strong></label>
+                <InputNumber class="form-control" @bind-Value="Libro.AnoPublicacion" />
+                <ValidationMessage For="@(() => Libro.AnoPublicacion)" />
+            </div>
+            
+            @if (!string.IsNullOrEmpty(MensajeError))
+            {
+                <div class="alert alert-danger">@MensajeError</div>
+            }
+        </div>
+        <div class="card-footer text-center">
+            <a href="/Libro/Index" class="btn btn-secondary me-2">Volver</a>
+            <button type="submit" class="btn btn-success">Guardar Cambios</button>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int LibroId { get; set; }
+
+    public Libros Libro { get; set; } = new Libros();
+    public string MensajeError { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var libroEncontrado = await librosServices.Buscar(LibroId);
+        if (libroEncontrado != null)
+        {
+            Libro = libroEncontrado;
+        }
+        else
+        {
+            MensajeError = "El libro no fue encontrado.";
+        }
+    }
+
+    public async Task Guardar()
+    {
+
+        if (await librosServices.ExtisteTitulo(Libro.Titulo, Libro.LibroId))
+        {
+            MensajeError = "Ya existe otro libro registrado con este título.";
+            return;
+        }
+
+        var guardado = await librosServices.Guardar(Libro);
+        if (guardado)
+        {
+            navigationManager.NavigateTo("/Libro/Index");
+        }
+        else
+        {
+            MensajeError = "Error al intentar actualizar el libro.";
+        }
+    }
+}

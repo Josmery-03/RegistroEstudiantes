@@ -1,0 +1,60 @@
+﻿@page "/Libro/Index"
+@inject LibrosServices librosServices
+@rendermode InteractiveServer
+
+<PageTitle>Consulta de Libros</PageTitle>
+
+<div class="card shadow-lg mt-4">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Listado de Libros</h5>
+        <a href="/Libro/Create" class="btn btn-light text-primary"><strong>+ Nuevo Libro</strong></a>
+    </div>
+    <div class="card-body">
+        <table class="table table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Título</th>
+                    <th>Autor</th>
+                    <th>Año</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (ListaLibros == null)
+                {
+                    <tr><td colspan="5" class="text-center">Cargando datos...</td></tr>
+                }
+                else if (!ListaLibros.Any())
+                {
+                    <tr><td colspan="5" class="text-center">No hay libros registrados actualmente.</td></tr>
+                }
+                else
+                {
+                    @foreach (var libro in ListaLibros)
+                    {
+                        <tr>
+                            <td>@libro.LibroId</td>
+                            <td>@libro.Titulo</td>
+                            <td>@libro.Autor</td>
+                            <td>@libro.AnoPublicacion</td>
+                            <td>
+                                <a href="/Libro/Edit/@libro.LibroId" class="btn btn-sm btn-outline-warning">Editar</a>
+                                <a href="/Libro/Delete/@libro.LibroId" class="btn btn-sm btn-outline-danger">Eliminar</a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    public List<Libros> ListaLibros { get; set; } = new List<Libros>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        ListaLibros = await librosServices.Listar(l => true);
+    }
+}

@@ -1,0 +1,70 @@
+﻿@page "/Libro/Delete/{LibroId:int}"
+@inject LibrosServices librosServices
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Eliminar Libro</PageTitle>
+
+<div class="card shadow-lg mt-4">
+    <div class="card-header bg-danger text-white">
+        <h5 class="mb-0">¿Está seguro de que desea eliminar este libro?</h5>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">ID:</dt>
+            <dd class="col-sm-9">@Libro.LibroId</dd>
+
+            <dt class="col-sm-3">Título:</dt>
+            <dd class="col-sm-9">@Libro.Titulo</dd>
+
+            <dt class="col-sm-3">Autor:</dt>
+            <dd class="col-sm-9">@Libro.Autor</dd>
+
+            <dt class="col-sm-3">Año de Publicación:</dt>
+            <dd class="col-sm-9">@Libro.AnoPublicacion</dd>
+        </dl>
+
+        @if (!string.IsNullOrEmpty(MensajeError))
+        {
+            <div class="alert alert-danger">@MensajeError</div>
+        }
+    </div>
+    <div class="card-footer text-center">
+        <a href="/Libro/Index" class="btn btn-secondary me-2">Cancelar</a>
+        <button type="button" class="btn btn-danger" @onclick="Eliminar">Confirmar Eliminar</button>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int LibroId { get; set; }
+
+    public Libros Libro { get; set; } = new Libros();
+    public string MensajeError { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var libroEncontrado = await librosServices.Buscar(LibroId);
+        if (libroEncontrado != null)
+        {
+            Libro = libroEncontrado;
+        }
+        else
+        {
+            MensajeError = "El libro no existe.";
+        }
+    }
+
+    public async Task Eliminar()
+    {
+        var eliminado = await librosServices.Eliminar(Libro.LibroId);
+        if (eliminado)
+        {
+            navigationManager.NavigateTo("/Libro/Index");
+        }
+        else
+        {
+            MensajeError = "No se pudo eliminar el libro.";
+        }
+    }
+}
