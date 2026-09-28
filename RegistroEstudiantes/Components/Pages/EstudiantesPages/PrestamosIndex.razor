@@ -1,0 +1,119 @@
+﻿@page "/Prestamo/Index"
+@inject PrestamosServices prestamosServices
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Consulta de Préstamos</PageTitle>
+
+<div class="container">
+    <div class="card shadow-lg">
+        <div class="card-header font-weight-bold d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Listado de Préstamos</h5>
+            <a href="/Prestamo/Create" class="btn btn-primary">
+                <span class="bi bi-plus-square"></span> Crear Préstamo
+            </a>
+        </div>
+
+        <div class="card-body">
+            @if (ListaPrestamos == null)
+            {
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <QuickGrid Items="@ListaPrestamos.AsQueryable()" class="table table-bordered text-center align-middle">
+                    <PropertyColumn Property="@(p => p.PrestamoId)" Title="ID" Sortable="true" />
+                    <PropertyColumn Property="@(p => p.Estudiante != null ? p.Estudiante.Nombres : "N/A")" Title="Estudiante" Sortable="true" />
+                    <PropertyColumn Property="@(p => p.Libro != null ? p.Libro.Titulo : "N/A")" Title="Libro" Sortable="true" />
+                    <PropertyColumn Property="@(p => p.FechaPrestamo.ToString("dd/MM/yyyy"))" Title="F. Préstamo" Sortable="true" />
+                    <PropertyColumn Property="@(p => p.FechaDevolucion.ToString("dd/MM/yyyy"))" Title="F. Devolución" Sortable="true" />
+                    
+                    <TemplateColumn Title="Estado" Sortable="true">
+                        @if (context.Devuelto)
+                        {
+                            <span class="badge bg-success">Devuelto</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark">Prestado</span>
+                        }
+                    </TemplateColumn>
+
+                    <TemplateColumn Title="Acciones">
+    <a href="/Prestamo/Edit/@context.PrestamoId" class="btn btn-outline-primary btn-sm me-1">
+        <i class="bi bi-pencil-square"></i> Editar
+    </a>
+    <button class="btn btn-outline-danger btn-sm" @onclick="() => MostrarModalEliminar(context.PrestamoId)">
+        <i class="bi bi-trash"></i> Eliminar
+    </button>
+</TemplateColumn>
+                </QuickGrid>
+            }
+            
+        </div>
+    </div>
+</div>
+
+@* Modal para confirmar la eliminacion *@
+@if (MostrarModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Confirmar Eliminación</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Estás seguro de que deseas eliminar este registro de préstamo? Esta acción no se puede deshacer.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CerrarModal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    public List<Prestamos> ListaPrestamos { get; set; } = new List<Prestamos>();
+    public bool MostrarModal { get; set; } = false;
+    public int PrestamoIdAEliminar { get; set; } = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarLista();
+    }
+
+    private async Task CargarLista()
+    {
+        ListaPrestamos = await prestamosServices.Listar(p => true);
+    }
+
+    private void MostrarModalEliminar(int prestamoId)
+    {
+        PrestamoIdAEliminar = prestamoId;
+        MostrarModal = true;
+    }
+
+    private void CerrarModal()
+    {
+        MostrarModal = false;
+        PrestamoIdAEliminar = 0;
+    }
+
+    private async Task ConfirmarEliminar()
+    {
+        if (PrestamoIdAEliminar > 0)
+        {
+            await prestamosServices.Eliminar(PrestamoIdAEliminar);
+            CerrarModal();
+            await CargarLista();
+        }
+    }
+}
