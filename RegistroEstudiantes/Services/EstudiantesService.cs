@@ -81,9 +81,5 @@ namespace RegistroEstudiantes.Services
                 .AnyAsync(e => e.Nombres.ToLower() == nombres.ToLower() && e.EstudianteId != id);
 
         }
-
-
-        
-    
     }
 }
