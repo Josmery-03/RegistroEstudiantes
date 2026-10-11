@@ -1,0 +1,65 @@
+﻿@page "/Devoluciones/Create"
+@using RegistroEstudiantes.Models
+@using RegistroEstudiantes.Services
+@inject NavigationManager navigationManager
+@inject DevolucionesService devolucionesService
+
+<PageTitle>Registrar Devolución</PageTitle>
+
+<EditForm Model="@devolucion" OnValidSubmit="Guardar" FormName="CrearDevolucionForm">
+    <DataAnnotationsValidator />
+    <div class="container mt-4">
+        <div class="card shadow-lg">
+            <div class="card-header bg-dark text-white">
+                <h5 class="card-title mb-0">Registrar Devolución de Libro</h5>
+            </div>
+            <div class="card-body bg-light">
+                <div class="mb-3">
+                    <label class="form-label font-weight-bold">Préstamo Id:</label>
+                    <InputNumber class="form-control" @bind-Value="@devolucion.PrestamoId" placeholder="Ingrese el ID del préstamo..."></InputNumber>
+                    <ValidationMessage For="@(() => devolucion.PrestamoId)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label font-weight-bold">Libro Id:</label>
+                    <InputNumber class="form-control" @bind-Value="@devolucion.LibroId" placeholder="Ingrese el ID del libro..."></InputNumber>
+                    <ValidationMessage For="@(() => devolucion.LibroId)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label font-weight-bold">Fecha de Devolución:</label>
+                    <InputDate class="form-control" @bind-Value="@devolucion.FachaDevolucion"></InputDate>
+                    <ValidationMessage For="@(() => devolucion.FachaDevolucion)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label font-weight-bold">Días Prestados:</label>
+                    <InputNumber class="form-control" @bind-Value="@devolucion.DiasPrestados" placeholder="Ingrese los días que duró prestado..."></InputNumber>
+                    <ValidationMessage For="@(() => devolucion.DiasPrestados)" />
+                </div>
+            </div>
+
+            <div class="card-footer bg-light d-flex justify-content-between">
+                <a href="/Devoluciones/Index" class="btn btn-secondary">
+                    <span class="bi bi-arrow-left"> Volver</span>
+                </a>
+                <button type="submit" class="btn btn-dark bi bi-save"> Guardar</button>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [SupplyParameterFromForm]
+    public Devoluciones devolucion { get; set; } = new();
+
+    public async Task Guardar()
+    {
+        var resultado = await devolucionesService.Guardar(devolucion);
+        if (resultado.IsSuccess)
+        {
+            navigationManager.NavigateTo("/Devoluciones/Index"); 
+            navigationManager.NavigateTo("/Devoluciones/Index");
+        }
+    }
+}
