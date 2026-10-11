@@ -17,6 +17,7 @@ options.UseSqlServer(ConStr));
 builder.Services.AddScoped<EstudiantesService>();
 builder.Services.AddScoped<LibrosServices>();
 builder.Services.AddScoped<PrestamosServices>();
+builder.Services.AddScoped<DevolucionesService>();
 
 var app = builder.Build();
 

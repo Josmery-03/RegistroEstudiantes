@@ -22,6 +22,31 @@ namespace RegistroEstudiantes.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("RegistroEstudiantes.Models.Devoluciones", b =>
+                {
+                    b.Property<int>("DevolucionesId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DevolucionesId"));
+
+                    b.Property<int>("DiasPrestados")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("FachaDevolucion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("LibroId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PrestamoId")
+                        .HasColumnType("int");
+
+                    b.HasKey("DevolucionesId");
+
+                    b.ToTable("Devoluciones");
+                });
+
             modelBuilder.Entity("RegistroEstudiantes.Models.Estudiantes", b =>
                 {
                     b.Property<int>("EstudianteId")
@@ -65,6 +90,9 @@ namespace RegistroEstudiantes.Migrations
                     b.Property<string>("Autor")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("CantidadDisponible")
+                        .HasColumnType("int");
 
                     b.Property<string>("Titulo")
                         .IsRequired()
