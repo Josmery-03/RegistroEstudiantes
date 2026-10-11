@@ -1,14 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using RegistroEstudiantes.Models;
 
-namespace RegistroEstudiantes.Context
+namespace RegistroEstudiantes.Context;
+public class Contexto : DbContext
 {
-    public class Contexto : DbContext
-    {
-        public Contexto(DbContextOptions<Contexto> options) : base(options) { }
-        public DbSet<Estudiantes> Estudiantes { get; set; }
-        public DbSet<Libros> Libros { get; set; }
-        public DbSet<Prestamos> Prestamos { get; set; }
-    }
+    public Contexto(DbContextOptions<Contexto> options) : base(options) { }
+    public DbSet<Estudiantes> Estudiantes { get; set; }
+    public DbSet<Libros> Libros { get; set; }
+    public DbSet<Prestamos> Prestamos { get; set; }
+    public DbSet<Devoluciones> Devoluciones { get; set; }
 }
- 

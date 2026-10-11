@@ -1,0 +1,128 @@
+﻿@page "/Devoluciones/Index"
+@using RegistroEstudiantes.Models
+@using RegistroEstudiantes.Services
+@inject DevolucionesService devolucionesService
+
+<PageTitle>Consulta de Devoluciones</PageTitle>
+
+<div class="container mt-4">
+    <div class="card shadow-lg">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Consulta de Devoluciones</h5>
+            <a href="/Devoluciones/Create" class="btn btn-light text-dark bi bi-plus-square-fill"> Crear</a>
+        </div>
+
+        <div class="card-body bg-light">
+            @* Filtros de busqueda *@
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label font-weight-bold">Filtrar por</label>
+                    <select class="form-select" @bind="Criterio">
+                        <option value="" disabled selected>Elija una opción</option>
+                        <option value="DevolucionesId">Devolución Id</option>
+                        <option value="PrestamoId">Préstamo Id</option>
+                        <option value="LibroId">Libro Id</option>
+                    </select>
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label font-weight-bold">Búsqueda</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Buscar..." @bind="ValorFiltro" />
+                        <button class="btn btn-outline-dark bi bi-search" type="button" @onclick="Buscar"></button>
+                    </div>
+                </div>
+            </div>
+
+            @* Tabla *@
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover text-center">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Devolución Id</th>
+                            <th>Préstamo Id</th>
+                            <th>Libro Id</th>
+                            <th>Fecha Devolución</th>
+                            <th>Días Prestados</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ListaDevoluciones == null)
+                        {
+                            <tr><td colspan="6">Cargando...</td></tr>
+                        }
+                        else if (!ListaDevoluciones.Any())
+                        {
+                            <tr><td colspan="6">No hay registros disponibles.</td></tr>
+                        }
+                        else
+                        {
+                            @foreach (var devolucion in ListaDevoluciones)
+                            {
+                                <tr>
+                                    <td>@devolucion.DevolucionesId</td>
+                                    <td>@devolucion.PrestamoId</td>
+                                    <td>@devolucion.LibroId</td>
+                                    <td>@devolucion.FachaDevolucion.ToString("dd/MM/yyyy")</td>
+                                    <td>@devolucion.DiasPrestados días</td>
+                                    <td>
+                                        <a href="/Devoluciones/Edit/@devolucion.DevolucionesId" class="btn btn-outline-dark btn-sm bi bi-pencil-square"> Editar</a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        @* Totales y Contador *@
+        <div class="card-footer bg-light d-flex justify-content-between text-muted">
+            <span><strong>Conteo de devoluciones:</strong> @(ListaDevoluciones?.Count ?? 0)</span>
+        </div>
+    </div>
+</div>
+
+@code {
+    public List<Devoluciones> ListaDevoluciones { get; set; } = new();
+    public string Criterio { get; set; } = "";
+    public string ValorFiltro { get; set; } = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var resultado = await devolucionesService.GetList(d => true);
+        resultado.OnSuccess(devoluciones => ListaDevoluciones = devoluciones);
+    }
+
+    public async Task Buscar()
+    {
+        if (!string.IsNullOrWhiteSpace(ValorFiltro))
+        {
+            if (Criterio == "DevolucionesId" && int.TryParse(ValorFiltro, out int devId))
+            {
+                var resultado = await devolucionesService.GetList(d => d.DevolucionesId == devId);
+                resultado.OnSuccess(devoluciones => ListaDevoluciones = devoluciones);
+            }
+            else if (Criterio == "PrestamoId" && int.TryParse(ValorFiltro, out int presId))
+            {
+                var resultado = await devolucionesService.GetList(d => d.PrestamoId == presId);
+                resultado.OnSuccess(devoluciones => ListaDevoluciones = devoluciones);
+            }
+            else if (Criterio == "LibroId" && int.TryParse(ValorFiltro, out int libId))
+            {
+                var resultado = await devolucionesService.GetList(d => d.LibroId == libId);
+                resultado.OnSuccess(devoluciones => ListaDevoluciones = devoluciones);
+            }
+            else
+            {
+                var resultado = await devolucionesService.GetList(d => true);
+                resultado.OnSuccess(devoluciones => ListaDevoluciones = devoluciones);
+            }
+        }
+        else
+        {
+            var resultado = await devolucionesService.GetList(d => true);
+            resultado.OnSuccess(devoluciones => ListaDevoluciones = devoluciones);
+        }
+    }
+}
