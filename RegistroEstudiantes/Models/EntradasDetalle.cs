@@ -14,7 +14,7 @@ public class EntradasDetalle {
 
     [ForeignKey("EntradaId")]
     [InverseProperty("EntradasDetalle")]
-    public virtual Entradas Entrada { get; set; }
+    public virtual Entradas Entrada { get; set; } = null!;
 
     [ForeignKey("LibroId")]
     public virtual Libros Libro {  get; set; }

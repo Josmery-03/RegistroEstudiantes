@@ -15,6 +15,6 @@ public class Entradas
     public double Total { get; set; }
 
     [InverseProperty("Entrada")]
-    public virtual ICollection<EntradasDetalle> EntradasDetalles { get; set; } = new List<EntradasDetalle>();
+    public virtual ICollection<EntradasDetalle> EntradasDetalle { get; set; } = new List<EntradasDetalle>();
 }
 
