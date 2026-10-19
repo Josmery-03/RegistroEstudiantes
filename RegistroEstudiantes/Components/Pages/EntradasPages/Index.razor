@@ -1,0 +1,130 @@
+﻿@page "/Entradas/Index"
+
+@using RegistroEstudiantes.Models
+@using RegistroEstudiantes.Services
+@inject IEntradasService entradasService
+@inject NavigationManager navigationManager
+
+<PageTitle>Registro de Entradas</PageTitle>
+
+<div class="container">
+    <div class="card shadow-lg">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Registro de Entradas</h5>
+            <a href="/Entradas/Create" class="btn btn-primary bi bi-plus-square"> Crear</a>
+        </div>
+
+        <div class="card-body">
+            @* Filtros de busqueda *@
+            <div class="row mb-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label"><strong>Filtrar por</strong></label>
+                    <InputSelect class="form-select" @bind-Value="Filtro">
+                        <option value="" selected disabled>Elija una opción</option>
+                        <option value="Concepto">Concepto</option>
+                        <option value="Fecha">Fecha</option>
+                    </InputSelect>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label"><strong>Búsqueda</strong></label>
+                    <div class="input-group">
+                        <input class="form-control" @bind="ValorFiltro" placeholder="Buscar..." />
+                        <button type="button" class="btn btn-outline-primary bi bi-search" @onclick="Buscar"></button>
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-outline-secondary bi bi-arrow-counterclockwise w-100" @onclick="Restablecer">
+                        Restablecer
+                    </button>
+                </div>
+            </div>
+
+            @* Filtro por fechas *@
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label class="form-label"><strong>Desde</strong></label>
+                    <InputDate class="form-control" @bind-Value="Desde" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label"><strong>Hasta</strong></label>
+                    <InputDate class="form-control" @bind-Value="Hasta" />
+                </div>
+            </div>
+
+            @* Tabla de entradas *@
+            <table class="table table-hover text-center align-middle mt-3">
+                <thead class="table-striped text-black">
+                    <tr>
+                        <th>EntradaId</th>
+                        <th>Fecha</th>
+                        <th>Concepto</th>
+                        <th>Total Cantidad</th>
+                        <th>Opciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var entrada in ListaEntradas)
+                    {
+                        <tr>
+                            <td>@entrada.EntradaId</td>
+                            <td>@entrada.Fecha.ToShortDateString()</td>
+                            <td>@entrada.Concepto</td>
+                            <td>@entrada.Total</td>
+                            <td class="text-center">
+                                <a href="/Entradas/Edit/@entrada.EntradaId" class="btn btn-outline-primary btn-sm me-1">
+                                    <span class="bi bi-pencil-square"></span> Editar
+                                </a>
+                                <a href="/Entradas/Delete/@entrada.EntradaId" class="btn btn-outline-danger btn-sm">
+                                    <span class="bi bi-trash"></span> Eliminar
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            <span><strong>Cantidad de registros:</strong> @ListaEntradas.Count</span>
+            <span><strong>Total Libros Ingresados:</strong> @ListaEntradas.Sum(e => e.Total)</span>
+        </div>
+    </div>
+</div>
+
+@code {
+    public List<Entradas> ListaEntradas { get; set; } = new List<Entradas>();
+
+    public string Filtro { get; set; } = string.Empty;
+    public string ValorFiltro { get; set; } = string.Empty;
+
+    public DateTime? Desde { get; set; }
+    public DateTime? Hasta { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        ListaEntradas = await entradasService.GetList(e => true);
+    }
+
+    private async Task Buscar()
+    {
+        if (Filtro == "Fecha" && Desde.HasValue && Hasta.HasValue)
+        {
+            ListaEntradas = await entradasService.GetList(f => f.Fecha >= Desde.Value && f.Fecha <= Hasta.Value);
+        }
+        else if (Filtro == "Concepto" && !string.IsNullOrWhiteSpace(ValorFiltro))
+        {
+            ListaEntradas = await entradasService.GetList(p => p.Concepto.ToLower().Contains(ValorFiltro.ToLower()));
+        }
+    }
+
+    private async Task Restablecer()
+    {
+        ListaEntradas = await entradasService.GetList(e => true);
+        Filtro = string.Empty;
+        ValorFiltro = string.Empty;
+        Desde = null;
+        Hasta = null;
+    }
+}

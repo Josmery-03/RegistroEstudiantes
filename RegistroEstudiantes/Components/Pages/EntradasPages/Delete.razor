@@ -1,0 +1,77 @@
+﻿@page "/Entradas/Delete/{EntradaId:int}"
+
+@using RegistroEstudiantes.Models
+@using RegistroEstudiantes.Services
+@inject IEntradasService entradasService
+@inject NavigationManager navigationManager
+
+<PageTitle>Eliminar Entrada</PageTitle>
+
+<div class="container">
+    <div class="card shadow-lg">
+        <div class="card-header text-center bg-danger text-white">
+            <h5><strong>Confirmar Eliminación de Entrada</strong></h5>
+        </div>
+
+        <div class="card-body">
+            <div class="text-center text-danger mb-3">
+                <h5><strong>¿Está seguro de que desea eliminar esta entrada?</strong></h5>
+                <p class="text-muted">Se descontarán las cantidades correspondientes del inventario de libros.</p>
+            </div>
+
+            <ul class="list-group mb-3">
+                <li class="list-group-item"><strong>Entrada ID: </strong>@Entrada.EntradaId</li>
+                <li class="list-group-item"><strong>Fecha: </strong>@Entrada.Fecha.ToShortDateString()</li>
+                <li class="list-group-item"><strong>Concepto: </strong>@Entrada.Concepto</li>
+                <li class="list-group-item"><strong>Total Cantidad: </strong>@Entrada.Total</li>
+            </ul>
+
+            <div class="border border-danger rounded p-3">
+                <h6 class="text-danger"><strong>Detalles de la entrada a remover:</strong></h6>
+                <ul class="mt-2">
+                    @foreach (var detalle in Entrada.EntradasDetalle)
+                    {
+                        <li>
+                            <strong>Libro ID:</strong> @detalle.LibroId - <strong>Título:</strong> @(detalle.Libro?.Titulo ?? "Libro") - <strong>Cantidad:</strong> @detalle.Cantidad
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+
+        <div class="card-footer text-center">
+            <a href="/Entradas/Index" class="btn btn-secondary bi bi-arrow-left"> Volver</a>
+            <button type="button" class="btn btn-danger bi bi-trash ms-2" @onclick="Eliminar"> Eliminar Definitivamente</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int EntradaId { get; set; }
+
+    public Entradas Entrada { get; set; } = new Entradas();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var entradaEncontrada = await entradasService.Buscar(EntradaId);
+        if (entradaEncontrada != null)
+        {
+            Entrada = entradaEncontrada;
+        }
+        else
+        {
+            navigationManager.NavigateTo("/Entradas/Index");
+        }
+    }
+
+    public async Task Eliminar()
+    {
+        var eliminado = await entradasService.Eliminar(Entrada.EntradaId);
+
+        if (eliminado)
+        {
+            navigationManager.NavigateTo("/Entradas/Index");
+        }
+    }
+}
