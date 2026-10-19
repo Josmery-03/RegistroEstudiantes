@@ -4,8 +4,8 @@ using System.Linq.Expressions;
 namespace RegistroEstudiantes.Services;
 public interface IEntradasService
 {
-    Task<bool> Guadar(Entradas entrada);
-    Task<bool> Buscar(int EntradaId);
+    Task<bool> Guardar(Entradas entrada);
+    Task<Entradas?> Buscar(int EntradaId);
     Task<bool> Eliminar (int EntradaId);
     Task<List<Entradas>> GetList(Expression<Func<Entradas, bool>> criterio);
 }
