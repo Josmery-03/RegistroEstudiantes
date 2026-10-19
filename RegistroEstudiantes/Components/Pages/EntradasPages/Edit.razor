@@ -1,0 +1,208 @@
+﻿@page "/Entradas/Edit/{EntradaId:int}"
+
+@using RegistroEstudiantes.Models
+@using RegistroEstudiantes.Services
+@inject IEntradasService entradasService
+@inject LibrosServices librosServices
+@inject NavigationManager navigationManager
+
+<PageTitle>Editar Entrada</PageTitle>
+
+<EditForm Model="Entrada" OnValidSubmit="Modificar">
+    <DataAnnotationsValidator />
+
+    <div class="container">
+        <div class="card shadow-lg">
+            <div class="card-header text-center bg-warning text-dark">
+                <h5 class="card-title mb-0">Editar Entrada de Libros</h5>
+            </div>
+
+            <div class="card-body">
+                @if (!string.IsNullOrEmpty(MensajeError))
+                {
+                    <div class="alert alert-danger" role="alert">
+                        @MensajeError
+                    </div>
+                }
+
+                <div class="row">
+                    @* EntradaId *@
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><strong>EntradaId</strong></label>
+                        <InputNumber class="form-control" @bind-Value="Entrada.EntradaId" readonly />
+                    </div>
+
+                    @* Fecha *@
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><strong>Fecha</strong></label>
+                        <InputDate class="form-control" @bind-Value="Entrada.Fecha" />
+                        <ValidationMessage For="(() => Entrada.Fecha)" />
+                    </div>
+                </div>
+
+                @* Concepto *@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Concepto</strong></label>
+                    <InputText class="form-control" @bind-Value="Entrada.Concepto" />
+                    <ValidationMessage For="(() => Entrada.Concepto)" />
+                </div>
+
+                @* Detalles de la entrada *@
+                <div class="border border-success rounded p-3 mt-3">
+                    <h5 class="text-success">Detalles de la Entrada</h5>
+
+                    <div class="row align-items-end mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label"><strong>Libro</strong></label>
+                            <InputSelect class="form-select" @bind-Value="LibroIdSeleccionado">
+                                <option value="0" selected disabled>Elija un libro...</option>
+                                @foreach (var libro in ListaLibros)
+                                {
+                                    <option value="@libro.LibroId">@libro.Titulo</option>
+                                }
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label"><strong>Cantidad</strong></label>
+                            <InputNumber class="form-control" @bind-Value="CantidadAgregar" min="1" />
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-outline-success w-100 bi bi-plus-lg" @onclick="AgregarDetalle">
+                                Agregar
+                            </button>
+                        </div>
+                    </div>
+
+                    <table class="table table-bordered text-center align-middle">
+                        <thead class="table-secondary">
+                            <tr>
+                                <th>Libro Id</th>
+                                <th>Libro</th>
+                                <th>Cantidad</th>
+                                <th>Remover</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var detalle in Entrada.EntradasDetalle)
+                            {
+                                var libroNombre = detalle.Libro?.Titulo ?? ListaLibros.FirstOrDefault(l => l.LibroId == detalle.LibroId)?.Titulo ?? "Libro " + detalle.LibroId;
+                                <tr>
+                                    <td>@detalle.LibroId</td>
+                                    <td>@libroNombre</td>
+                                    <td>@detalle.Cantidad</td>
+                                    <td>
+                                        <button type="button" class="btn btn-outline-danger bi bi-trash" @onclick="() => RemoverDetalle(detalle)"></button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @* Total *@
+                <div class="row mt-3">
+                    <div class="col-md-4 offset-md-8">
+                        <div class="mb-3 text-end">
+                            <label class="form-label"><strong>Total Libros Agregados</strong></label>
+                            <div class="form-control fw-bold bg-light text-end">@Entrada.Total</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* Footer *@
+            <div class="card-footer text-center">
+                <a href="/Entradas/Index" class="btn btn-secondary"><span class="bi bi-arrow-left"></span> Volver</a>
+                <button type="submit" class="btn btn-primary bi bi-floppy ms-2"> Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int EntradaId { get; set; }
+
+    public Entradas Entrada { get; set; } = new Entradas();
+    public List<Libros> ListaLibros { get; set; } = new();
+
+    public int LibroIdSeleccionado { get; set; }
+    public int CantidadAgregar { get; set; }
+    public string MensajeError { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ListaLibros = await librosServices.Listar(l => true);
+        var entradaHallada = await entradasService.Buscar(EntradaId);
+
+        if (entradaHallada != null)
+        {
+            Entrada = entradaHallada;
+        }
+        else
+        {
+            navigationManager.NavigateTo("/Entradas/Index");
+        }
+    }
+
+    private void AgregarDetalle()
+    {
+        MensajeError = string.Empty;
+        if (LibroIdSeleccionado <= 0 || CantidadAgregar <= 0)
+        {
+            MensajeError = "Debe seleccionar un libro y colocar una cantidad válida.";
+            return;
+        }
+
+        var existe = Entrada.EntradasDetalle.FirstOrDefault(d => d.LibroId == LibroIdSeleccionado);
+        if (existe != null)
+        {
+            existe.Cantidad += CantidadAgregar;
+        }
+        else
+        {
+            Entrada.EntradasDetalle.Add(new EntradasDetalle
+            {
+                EntradaId = Entrada.EntradaId,
+                LibroId = LibroIdSeleccionado,
+                Cantidad = CantidadAgregar
+            });
+        }
+
+        CalcularTotal();
+        LibroIdSeleccionado = 0;
+        CantidadAgregar = 0;
+    }
+
+    private void RemoverDetalle(EntradasDetalle detalle)
+    {
+        Entrada.EntradasDetalle.Remove(detalle);
+        CalcularTotal();
+    }
+
+    private void CalcularTotal()
+    {
+        Entrada.Total = Entrada.EntradasDetalle.Sum(d => d.Cantidad);
+    }
+
+    public async Task Modificar()
+    {
+        MensajeError = string.Empty;
+        if (Entrada.EntradasDetalle.Count == 0)
+        {
+            MensajeError = "Debe conservar al menos un detalle en la entrada.";
+            return;
+        }
+
+        var modifico = await entradasService.Guardar(Entrada);
+
+        if (modifico)
+        {
+            navigationManager.NavigateTo("/Entradas/Index");
+        }
+        else
+        {
+            MensajeError = "No se pudo modificar la entrada.";
+        }
+    }
+}

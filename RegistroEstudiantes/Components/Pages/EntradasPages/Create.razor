@@ -1,0 +1,206 @@
+﻿@page "/Entradas/Create"
+
+@rendermode InteractiveServer
+@using RegistroEstudiantes.Models
+@using RegistroEstudiantes.Services
+@inject IEntradasService entradasService
+@inject LibrosServices librosServices
+@inject NavigationManager navigationManager
+
+<PageTitle>Crear Entrada</PageTitle>
+
+<div class="container">
+    <div class="card shadow-lg">
+        <div class="card-header text-center bg-primary text-white">
+            <h5 class="card-title mb-0">Crear Entrada de Libros</h5>
+        </div>
+
+        <div class="card-body">
+            @if (!string.IsNullOrEmpty(MensajeError))
+            {
+                <div class="alert alert-danger" role="alert">
+                    @MensajeError
+                </div>
+            }
+
+            <div class="row">
+                @* EntradaId *@
+                <div class="col-md-6 mb-3">
+                    <label class="form-label"><strong>EntradaId</strong></label>
+                    <input type="number" class="form-control" value="@Entrada.EntradaId" readonly />
+                </div>
+
+                @* Fecha *@
+                <div class="col-md-6 mb-3">
+                    <label class="form-label"><strong>Fecha</strong></label>
+                    <input type="date" class="form-control" @bind="Entrada.Fecha" />
+                </div>
+            </div>
+
+            @* Concepto *@
+            <div class="mb-3">
+                <label class="form-label"><strong>Concepto</strong></label>
+                <input type="text" class="form-control" @bind="Entrada.Concepto" placeholder="Ingrese el concepto de la entrada" />
+            </div>
+
+            @* Detalles de la entrada *@
+            <div class="border border-success rounded p-3 mt-3">
+                <h5 class="text-success">Detalles de la Entrada</h5>
+
+                <div class="row align-items-end mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>Libro</strong></label>
+                        <select class="form-select" @bind="LibroIdSeleccionado">
+                            <option value="0" disabled selected>Elija un libro...</option>
+                            @foreach (var libro in ListaLibros)
+                            {
+                                <option value="@libro.LibroId">@libro.Titulo</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label"><strong>Cantidad</strong></label>
+                        <input type="number" class="form-control" @bind="CantidadAgregar" min="1" />
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-outline-success w-100 bi bi-plus-lg" @onclick="AgregarDetalle">
+                            Agregar
+                        </button>
+                    </div>
+                </div>
+
+                <table class="table table-bordered text-center align-middle">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>Libro Id</th>
+                            <th>Libro</th>
+                            <th>Cantidad</th>
+                            <th>Remover</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var detalle in Entrada.EntradasDetalle)
+                        {
+                            var libroNombre = ListaLibros.FirstOrDefault(l => l.LibroId == detalle.LibroId)?.Titulo ?? "Libro " + detalle.LibroId;
+                            <tr>
+                                <td>@detalle.LibroId</td>
+                                <td>@libroNombre</td>
+                                <td>@detalle.Cantidad</td>
+                                <td>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" @onclick="() => RemoverDetalle(detalle)">
+                                        <span class="bi bi-trash"></span> Remover
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @* Total *@
+            <div class="row mt-3">
+                <div class="col-md-4 offset-md-8">
+                    <div class="mb-3 text-end">
+                        <label class="form-label"><strong>Total Libros Agregados</strong></label>
+                        <div class="form-control fw-bold bg-light text-end">@Entrada.Total</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Footer *@
+        <div class="card-footer text-center">
+            <a href="/Entradas/Index" class="btn btn-secondary"><span class="bi bi-arrow-left"></span> Volver</a>
+            <button type="button" class="btn btn-primary bi bi-floppy ms-2" @onclick="Guardar"> Guardar</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    public Entradas Entrada { get; set; } = new Entradas();
+    public List<Libros> ListaLibros { get; set; } = new();
+
+    public int LibroIdSeleccionado { get; set; }
+    public int CantidadAgregar { get; set; }
+    public string MensajeError { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ListaLibros = await librosServices.Listar(l => true);
+        Entrada.Fecha = DateTime.Now;
+    }
+
+    private void AgregarDetalle()
+    {
+        MensajeError = string.Empty;
+
+        if (LibroIdSeleccionado <= 0)
+        {
+            MensajeError = "Debe seleccionar un libro.";
+            return;
+        }
+
+        if (CantidadAgregar <= 0)
+        {
+            MensajeError = "Debe ingresar una cantidad mayor a 0.";
+            return;
+        }
+
+        var existe = Entrada.EntradasDetalle.FirstOrDefault(d => d.LibroId == LibroIdSeleccionado);
+        if (existe != null)
+        {
+            existe.Cantidad += CantidadAgregar;
+        }
+        else
+        {
+            Entrada.EntradasDetalle.Add(new EntradasDetalle
+            {
+                LibroId = LibroIdSeleccionado,
+                Cantidad = CantidadAgregar
+            });
+        }
+
+        CalcularTotal();
+        LibroIdSeleccionado = 0;
+        CantidadAgregar = 0;
+    }
+
+    private void RemoverDetalle(EntradasDetalle detalle)
+    {
+        Entrada.EntradasDetalle.Remove(detalle);
+        CalcularTotal();
+    }
+
+    private void CalcularTotal()
+    {
+        Entrada.Total = Entrada.EntradasDetalle.Sum(d => d.Cantidad);
+    }
+
+    public async Task Guardar()
+    {
+        MensajeError = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(Entrada.Concepto))
+        {
+            MensajeError = "Debe ingresar un concepto para la entrada.";
+            return;
+        }
+
+        if (Entrada.EntradasDetalle.Count == 0)
+        {
+            MensajeError = "Debe agregar al menos un detalle a la entrada.";
+            return;
+        }
+
+        var guardo = await entradasService.Guardar(Entrada);
+
+        if (guardo)
+        {
+            navigationManager.NavigateTo("/Entradas/Index");
+        }
+        else
+        {
+            MensajeError = "No se pudo guardar la entrada en la base de datos.";
+        }
+    }
+}
