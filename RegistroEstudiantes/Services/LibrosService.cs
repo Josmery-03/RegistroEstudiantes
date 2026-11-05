@@ -25,7 +25,6 @@ namespace RegistroEstudiantes.Services
                 contexto.Libros.Add(libro);
                 return await contexto.SaveChangesAsync() > 0;
             }
-
             private async Task<bool> Modificar(Libros libro)
             {
                 await using var contexto = await DbFactory.CreateDbContextAsync();
@@ -33,26 +32,19 @@ namespace RegistroEstudiantes.Services
                 return await contexto
                     .SaveChangesAsync() > 0;
             }
-
-            // Metodo guardar
-
             public async Task<bool> Guardar(Libros libro)
             {
                 if (!await Existe(libro.LibroId))
                     return await Insertar(libro);
                 else
-                {
                     return await Modificar(libro);
-                }
             }
-
             public async Task<Libros?> Buscar(int libroId)
             {
                 await using var contexto = await DbFactory.CreateDbContextAsync();
                 return await contexto.Libros
                     .FirstOrDefaultAsync(l => l.LibroId == libroId);
             }
-
             public async Task<bool> Eliminar(int libroId)
             {
                 await using var contexto = await DbFactory.CreateDbContextAsync();

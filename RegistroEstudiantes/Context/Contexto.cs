@@ -11,5 +11,4 @@ public class Contexto : DbContext
     public DbSet<Devoluciones> Devoluciones { get; set; }
     public virtual DbSet<Entradas> Entradas { get; set; }
     public virtual DbSet<EntradasDetalle> EntradasDetalle { get; set; }
-   
 }

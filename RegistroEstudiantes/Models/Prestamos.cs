@@ -11,7 +11,6 @@ public class Prestamos
     [Range(1, int.MaxValue, ErrorMessage = "Debes seleccionar a un estudiante")]
     public int EstudianteId { get; set; }
 
-
     [Required(ErrorMessage = "Debes de seleccionar a un libro")]
     [Range(1, int.MaxValue, ErrorMessage = "Debes seleccionar a un libro")]
     public int LibroId { get; set; }
